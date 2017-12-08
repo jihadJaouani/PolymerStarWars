@@ -1,0 +1,154 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="shared-details-styles.html">
+<dom-module id="my-pdetails">
+  <template>
+    <style include="shared-details-styles">
+      :host {
+        display: block;
+        padding: 20px;
+        margin: 30px;
+      }
+    
+      .films{    
+        width: 50%;
+        display: inline-block;
+        text-align: center;
+      }
+      .starships{
+        width :50%;
+        float:right;
+        text-align: center;
+        padding: auto;
+      }
+      
+    </style>
+
+    <div class="cards">
+      
+      <h1>{{person.name}}</h1>
+     <app-route route="{{route}}" pattern="/:id" data="{{routeData}}" tail="{{subroute}}"></app-route>
+     
+      <iron-ajax auto url="https://swapi.co/api/people/{{routeData.id}}/" handle-as="json" on-response="handleResponse" last-response="{{person}}">
+      </iron-ajax>
+      <div class="info">
+        <div style="width:85%;display: inline-block;">
+        Année de naissance: {{person.birth_year}}<br>
+        Taille: {{person.height}} cm <br/>
+        Poids: {{person.mass}} Kg<br/>
+      </div>
+      <div style="width:10%;display: inline-block;">
+          <template is="dom-if" if="{{male}}"> 
+            <img src="../images/male.png">
+          </template>
+          <template is="dom-if" if="{{female}}"> 
+              <img src="../images/female.png">
+          </template>
+          <template is="dom-if" if="{{na}}"> 
+              <img src="../images/na.png">
+          </template>
+      </div>
+    </div>
+    <iron-ajax id="listFilms" url="" handle-as="json" on-response="handle" last-response="{{film}}">
+      </iron-ajax>
+      <div class="data">
+      <div class="films">
+      <h3>Films</h3>
+      <template is="dom-repeat" items="{{tabFilms}}" as="listeF">
+        <a href="/fdetails/{{listeF.url}}/"> {{listeF.name}}</a>
+        <br>
+      </template>
+    </div>
+
+      <iron-ajax id="listStarships" url="" handle-as="json" on-response="handleS" last-response="{{starship}}">
+      </iron-ajax>
+      <div class="starships">
+
+      <template is="dom-if" if="{{StarshipExist}}"> 
+      <h3>Starships</h3>
+      <template is="dom-repeat" items="{{tabStarships}}" as="listeStar"> 
+        <a href="/sdetails/{{listeStar.url}}/"> {{listeStar.name}}</a>
+        <br>
+      </template>
+      </template>
+    </div>
+</div>
+    </div>
+  </template>
+
+  <script>
+    class MyPdetails extends Polymer.Element {
+      static get is() {
+        return 'my-pdetails';
+      }
+      static get properties() {
+        return {
+          tabFilms: {
+            type: Array,
+            value: []
+          },
+          tabStarships: {
+            type: Array,
+            value: []
+          }
+
+        }
+      }
+      handleResponse(resp) {
+        this.tabFilms = [];
+        this.tabStarships = [];
+        var id = [];
+        for (let i = 0; i < this.person.films.length; i++) {
+          id.push(this.person.films[i].split("/")[5]);
+          this.$.listFilms.url = "https://swapi.co/api/films/" + id[i];
+          console.log(this.$.listFilms);
+          this.$.listFilms.generateRequest();
+        }
+        var ids = [];
+        for (let i = 0; i < this.person.starships.length; i++) {
+          ids.push(this.person.starships[i].split("/")[5]);
+          this.$.listStarships.url = "https://swapi.co/api/starships/" + ids[i] + "/";
+          this.$.listStarships.generateRequest();
+        }
+console.log(resp.detail.response.gender);
+       if(resp.detail.response.gender=="male"){
+          this.male=true;
+        }
+        if(resp.detail.response.gender=="female"){
+          this.female=true;
+        }
+        if(resp.detail.response.gender=="n/a"){
+          this.na=true;
+        }
+      }
+      handle(f) {
+        //console.log(f.detail.__data.response.url);
+        this.push('tabFilms', { name: f.detail.__data.response.title, url: f.detail.__data.response.url.split("/")[5] });
+       
+      }
+      handleS(s) {
+        //console.log(s.detail.__data.response.url);
+        this.push('tabStarships', { name: s.detail.__data.response.name, url: s.detail.__data.response.url.split("/")[5] });
+        if(tabStarships.length!=0){
+          this.StarshipExist=true;
+        }
+      }
+
+
+
+    }
+
+    window.customElements.define(MyPdetails.is, MyPdetails);
+  </script>
+</dom-module>

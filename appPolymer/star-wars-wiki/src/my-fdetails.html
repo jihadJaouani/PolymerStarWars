@@ -1,0 +1,130 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="shared-details-styles.html">
+<dom-module id="my-fdetails">
+  <template>
+    <style include="shared-details-styles">
+      :host {
+        display: block;
+        padding: 20px;
+        margin: 30px;
+      }
+    
+      
+      .characters{    
+        width: 50%;
+        display: inline-block;
+        text-align: center;
+      }
+      .starships{
+        width :50%;
+        float:right;
+        text-align: center;
+        padding: auto;
+      }
+
+    </style>
+
+    <div class="cards">
+
+      <app-route route="{{route}}" pattern="/:idf" data="{{routeDataf}}" tail="{{subroute}}"></app-route>
+      <iron-ajax auto url="https://swapi.co/api/films/{{routeDataf.idf}}/" handle-as="json" on-response="handleResponse" last-response="{{film}}">
+      </iron-ajax>
+      <h1>{{film.title}}</h1>
+      <div class="info">
+          Episode:{{film.episode_id}}. Sous la direction de {{film.director}}.<br>
+          <p style="text-align:right">Produit par:{{film.producer}}</p>
+          <p>{{film.opening_crawl}}</p>
+      </div>
+      <div class="data">
+      <div class="characters">
+
+        <h3>Characters</h3>
+        <iron-ajax id="listPeople" url="" handle-as="json" on-response="handle" last-response="{{people}}">
+        </iron-ajax>
+        <template is="dom-repeat" items="{{tabPeople}}" as="person">
+          <a href="/pdetails/{{person.url}}/"> {{person.name}}</a>
+
+          <br>
+        </template>
+      </div>
+      <div class="starships">
+        <h3>Starships</h3>
+        <iron-ajax id="listStarships" url="" handle-as="json" on-response="handleS" last-response="{{starship}}">
+        </iron-ajax>
+
+        <template is="dom-repeat" items="{{tabStarships}}" as="listeStar">
+          <!--listeF.url: id-->
+          <a href="/sdetails/{{listeStar.url}}/"> {{listeStar.name}}</a>
+          <br>
+        </template>
+      </div>
+    </div>
+
+
+
+    </div>
+  </template>
+
+  <script>
+    class MyFdetails extends Polymer.Element {
+      static get is() {
+        return 'my-fdetails';
+      }
+      static get properties() {
+        return {
+          tabPeople: {
+            type: Array,
+            value: []
+          },
+          tabStarships: {
+            type: Array,
+            value: []
+          }
+        }
+      }
+
+
+      handleResponse(resp) {
+
+        this.tabPeople = [];
+        this.tabStarships = [];
+        var id = [];
+        for (let i = 0; i < this.film.characters.length; i++) {
+          id.push(this.film.characters[i].split("/")[5]);
+          this.$.listPeople.url = "https://swapi.co/api/people/" + id[i] + "/";
+          this.$.listPeople.generateRequest();
+        }
+        var ids = [];
+        for (let i = 0; i < this.film.starships.length; i++) {
+          ids.push(this.film.starships[i].split("/")[5]);
+          this.$.listStarships.url = "https://swapi.co/api/starships/" + ids[i] + "/";
+          this.$.listStarships.generateRequest();
+        }
+
+      }
+
+      handle(p) {
+        // console.log(p.detail.__data.response.name);
+        this.push('tabPeople', { name: p.detail.__data.response.name, url: p.detail.__data.response.url.split("/")[5] })
+      }
+      handleS(s) {
+        // console.log(s.detail.__data.response.url);
+        this.push('tabStarships', { name: s.detail.__data.response.name, url: s.detail.__data.response.url.split("/")[5] })
+      }
+    }
+
+    window.customElements.define(MyFdetails.is, MyFdetails);
+  </script>
+</dom-module>

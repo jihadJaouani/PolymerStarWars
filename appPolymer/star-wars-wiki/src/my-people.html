@@ -1,0 +1,96 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-search-input/paper-search-input.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-people">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+    </style>
+
+    <div class="cards">
+      <h1>People</h1>
+
+      <template is="dom-if" if="[[test]]">
+        <iron-ajax auto url="https://swapi.co/api/people/?search={{text}}" handle-as="json" on-response="Trouver">
+        </iron-ajax>
+      </template>
+      <div class="search">
+        <paper-search-input on-input="Ecrire" value="{{text}}"></paper-search-input>
+      </div>
+
+      <iron-ajax auto url="https://swapi.co/api/people/" handle-as="json" on-response="handleResponse">
+      </iron-ajax>
+
+      <template is="dom-repeat" items="{{data.results}}" as="person">
+        <div class="contenu">
+          <div classe="titre">[[person.name]]</div>
+          <div>
+            <paper-button toggles raised class="bouton" on-click="handleRequest">Details</paper-button>
+          </div>
+        </div>
+      </template>
+
+      <div class="previous">
+        <template is="dom-if" if="{{data.previous}}">
+          <paper-button toggles raised on-click="previous">
+            <
+          </paper-button>
+        </template>
+      </div>
+      <div class="next">
+        <template is="dom-if" if="{{data.next}}">
+          <paper-button raised on-click="next">
+            >
+          </paper-button>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    class MyPeople extends Polymer.Element {
+      static get is() {
+        return 'my-people';
+      }
+      next() {
+        fetch(this.data.next).then(resp=> resp.json()).then(r => { this.data = r; this.text = "" });
+      }
+      previous() {
+        fetch(this.data.previous).then(resp => resp.json()).then(r => { this.data = r; this.text = "" });
+      }
+
+      handleResponse(resp) {
+        this.data = resp.detail.response;
+        this.text = "";
+      }
+      handleRequest(res) {
+        var id;
+        this.id = res.model.__data.person.url.split("/")[5];
+        location.href = "/pdetails/" + res.model.__data.person.url.split("/")[5];
+      }
+      Ecrire(t) {
+        if (this.t != "") {
+          this.test = true;
+        }
+        else {
+          this.test = false;
+
+        }
+      }
+      Trouver(test) {
+        if (this.t != "") {
+          this.data = test.detail.response;
+        }
+      }
+
+    }
+
+    window.customElements.define(MyPeople.is, MyPeople);
+  </script>
+</dom-module>

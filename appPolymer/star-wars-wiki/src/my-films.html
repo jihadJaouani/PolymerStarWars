@@ -1,0 +1,74 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-search-input/paper-search-input.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-films">
+
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+    </style>
+
+    <div class="cards">
+
+      <h1>Films</h1>
+      
+      <template is="dom-if" if="[[test]]">
+        <iron-ajax auto url="https://swapi.co/api/films/?search={{text}}" handle-as="json" on-response="Trouver">
+        </iron-ajax>
+      </template>
+      <div class="search">
+        <paper-search-input on-input="Ecrire" value="{{text}}"></paper-search-input>
+      </div>
+
+      <iron-ajax auto url="https://swapi.co/api/films/" handle-as="json" on-response="handleResponse">
+      </iron-ajax>
+      <template is="dom-repeat" items="{{data.results}}" as="film">
+        <div class="contenu">
+          <div classe="titre">[[film.title]]</div>
+          <div><paper-button toggles raised class="bouton" on-click="handleRequest">Details</paper-button></div>
+        </div>
+      </template>
+
+    </div>
+  </template>
+
+  <script>
+    class MyFilms extends Polymer.Element {
+      static get is() { return 'my-films'; }
+      
+      handleResponse(resp) {
+        this.data = resp.detail.response;
+        this.text = "";
+      }
+      handleRequest(res) {
+        var id;
+        id = res.model.__data.film.url.split("/")[5];
+        location.href = "/fdetails/" + id;
+      }
+      Ecrire(t) {
+        if (this.t != "") {
+          this.test = true;
+        }
+        else {
+          this.test = false;
+
+        }
+      }
+      Trouver(test) {
+        if (this.t != "") {
+          this.data = test.detail.response;
+        }
+      }
+
+    }
+
+    window.customElements.define(MyFilms.is, MyFilms);
+
+  </script>
+</dom-module>

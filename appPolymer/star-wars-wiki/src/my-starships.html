@@ -1,0 +1,94 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-search-input/paper-search-input.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-starships">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <div class="cards">
+      <h1>StarShips</h1>
+
+      <template is="dom-if" if="[[tests]]">
+        <iron-ajax auto url="https://swapi.co/api/starships/?search={{texts}}" handle-as="json" on-response="Trouver">
+        </iron-ajax>
+      </template>
+      <div class="search">
+        <paper-search-input on-input="Ecrire" value="{{texts}}"></paper-search-input>
+      </div>
+
+      <iron-ajax auto url="https://swapi.co/api/starships/" handle-as="json" on-response="handleResponse">
+      </iron-ajax>
+
+      <template is="dom-repeat" items="{{data.results}}" as="starship">
+        <div class="contenu">
+          <div classe="titre">[[starship.name]]</h4>
+          </div>
+          <div>
+            <paper-button toggles raised class="bouton" on-click="handleRequest">Details</paper-button>
+      </template>
+
+      <div class="previous">
+        <template is="dom-if" if="{{data.previous}}">
+          <paper-button toggles raised on-click="previous">
+            < </paper-button>
+        </template>
+      </div>
+      <div class="next">
+        <template is="dom-if" if="{{data.next}}">
+          <paper-button raised on-click="next">
+            >
+          </paper-button>
+        </template>
+      </div>
+      </div>
+  </template>
+
+  <script>
+    class MyStarships extends Polymer.Element {
+      static get is() { return 'my-starships'; }
+
+      next() {
+        fetch(this.data.next).then(resp => resp.json()).then(r => { this.data = r; this.texts = "" });
+      }
+      previous() {
+        fetch(this.data.previous).then(resp => resp.json()).then(r => { this.data = r; this.texts = "" });
+      }
+      handleResponse(resp) {
+        this.data = resp.detail.response;
+        this.texts = "";
+      }
+      handleRequest(res) {
+        var id;
+        id = res.model.starship.url.split("/")[5];
+        location.href = "/sdetails/" + id;
+      }
+      Ecrire(t) {
+        if (this.t != "") {
+          this.tests = true;
+        }
+        else {
+          this.tests = false;
+
+        }
+      }
+      Trouver(test) {
+        if (this.t != "") {
+          this.data = test.detail.response;
+        }
+      }
+     
+
+    }
+
+    window.customElements.define(MyStarships.is, MyStarships);
+  </script>
+</dom-module>

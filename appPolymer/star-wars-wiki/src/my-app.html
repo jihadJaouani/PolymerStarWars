@@ -1,0 +1,208 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="my-icons.html">
+
+<link rel="lazy-import" href="my-films.html">
+<link rel="lazy-import" href="my-people.html">
+<link rel="lazy-import" href="my-starships.html">
+<link rel="lazy-import" href="my-pdetails.html">
+<link rel="lazy-import" href="my-fdetails.html">
+<link rel="lazy-import" href="my-sdetails.html">
+<link rel="lazy-import" href="my-view404.html">
+
+<dom-module id="my-app">
+  <template>
+    <style>
+       *{
+        font-family: monospace;
+        font-size: 18px;
+      }
+      :host {
+        --app-primary-color: yellow;
+        --app-secondary-color: rgb(255, 255, 255);
+        display: block;
+      }
+      @media only screen and (min-width: 1100px){
+        :host {
+
+          --app-drawer-width:10%;
+        }
+      }
+     
+
+
+      app-drawer-layout:not([narrow]) [drawer-toggle] {
+        display: none; 
+      }
+
+      app-header {
+        color:yellow;
+        background-color: var(--app-primary-color);
+      }
+
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color:yellow;
+        
+      }
+
+      .drawer-list {
+        margin-top:0 0px;
+        
+      }
+
+      .drawer-list a {
+        display: block;
+        padding: 20% 10%;
+        text-decoration: none;
+        color: yellow;
+        height: 20%;
+        background-color: black;
+        font-size: 19px;
+      }
+      
+      @media only screen and (min-height: 750px){
+        .drawer-list a:first-child {
+        padding-top:80%}
+      }
+
+      .drawer-list a.iron-selected {
+        color:yellow;
+        font-weight: bold;
+      }
+      app-toolbar{
+        background-color:black;
+        color:yellow;
+        text-align: center;
+        
+
+      }
+      .main{
+        font-size: 40px;
+      }
+    </style>
+
+    <app-location
+        route="{{route}}"
+        url-space-regex="^[[rootPath]]">
+    </app-location>
+
+    <app-route
+        route="{{route}}"
+        pattern="[[rootPath]]:page"
+        data="{{routeData}}"
+        tail="{{subroute}}">
+    </app-route>
+
+    <app-drawer-layout fullbleed narrow="{{narrow}}">
+      <!-- Drawer content -->
+      <app-drawer  id="drawer" slot="drawer" swipe-open="[[narrow]]" >
+        <app-toolbar></app-toolbar>
+        <iron-selector  selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+          <a name="films" href="[[rootPath]]films">Films</a>
+          <a name="people" href="[[rootPath]]people">People</a>
+          <a name="starships" href="[[rootPath]]starships">Starships</a>
+          <a name="#" href="[[rootPath]]"></a>
+        </iron-selector>
+      </app-drawer>
+
+      <!-- Main content -->
+      <app-header-layout has-scrolling-region>
+
+        <app-header slot="header" condenses reveals effects="waterfall">
+          <app-toolbar>
+            <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
+            <div main-title class="main">Star Wars Wiki</div>
+          </app-toolbar>
+        </app-header>
+
+        <iron-pages
+            selected="[[page]]"
+            attr-for-selected="name"
+            fallback-selection="view404"
+            role="main">
+          <my-films name="films"></my-films>
+          <my-people name="people"></my-people>
+          <my-starships name="starships"></my-starships>
+          <my-pdetails name="pdetails" route="{{subroute}}"></my-pdetails>
+          <my-fdetails name="fdetails" route="{{subroute}}"></my-fdetails>
+          <my-sdetails name="sdetails" route="{{subroute}}"></my-sdetails>
+          <my-view404 name="view404"></my-view404>
+        </iron-pages>
+      </app-header-layout>
+    </app-drawer-layout>
+  </template>
+
+  <script>
+    class MyApp extends Polymer.Element {
+      static get is() { return 'my-app'; }
+
+      static get properties() {
+        return {
+          page: {
+            type: String,
+            reflectToAttribute: true,
+            observer: '_pageChanged',
+          },
+          routeData: Object,
+          subroute: String,
+          // This shouldn't be neccessary, but the Analyzer isn't picking up
+          // Polymer.Element#rootPath
+          rootPath: String,
+        };
+      }
+
+      static get observers() {
+        return [
+          '_routePageChanged(routeData.page)',
+        ];
+      }
+
+      _routePageChanged(page) {
+        // If no page was found in the route data, page will be an empty string.
+        // Default to 'films' in that case.
+        this.page = page || 'films';
+
+        // Close a non-persistent drawer when the page & route are changed.
+        if (!this.$.drawer.persistent) {
+          this.$.drawer.close();
+        }
+      }
+
+      _pageChanged(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+        Polymer.importHref(
+            resolvedPageUrl,
+            null,
+            this._showPage404.bind(this),
+            true);
+      }
+
+      _showPage404() {
+        this.page = 'view404';
+      }
+    }
+
+    window.customElements.define(MyApp.is, MyApp);
+  </script>
+</dom-module>
